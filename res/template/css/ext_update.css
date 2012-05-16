@@ -1,0 +1,70 @@
+.table-list {
+	border-collapse: collapse;
+	color: #606060;
+}
+.table-list tr:hover {
+	background-color: #dedede;
+}
+	.table-list .table-inprocess {
+		background-color: rgb(216,236,208);
+	}
+.table-list th, .table-list td {
+	border-bottom: 1px solid #cdcdcd;
+	padding: 4px 6px;
+}
+/*
+	.table-list thead th {
+		border-top: 1px solid #cdcdcd;
+		background-color: #eee;
+	}
+*/
+	.table-list tbody th {
+		font-style: italic;
+		font-weight: normal;
+	}
+		.table-list tbody th span {
+			font-style: normal;
+			font-weight: bold;
+		}
+		.table-list tbody th img {
+			float: left;
+			margin-right: 5px;
+		}
+
+	.table-list .table-skipped th, .table-list .table-skipped td,
+	.table-list .table-excluded th, .table-list .table-excluded td {
+		color: #888;
+	}
+	.table-list .table-excluded th, .table-list .table-excluded td {
+		text-decoration: line-through;
+	}
+
+.table-list td.state span {
+	background: transparent url(../../../../../../typo3/sysext/t3skin/images/icons/status/dialog-information.png) scroll center no-repeat;
+	display: block;
+	height: 16px;
+	width: 16px;
+}
+	.table-list .table-skipped td.state span {
+		background-image: url(../../../../../../typo3/sysext/t3skin/images/icons/status/dialog-notification.png);
+	}
+	.table-list .table-excluded td.state span {
+		background-image: url(../../../../../../typo3/sysext/t3skin/images/icons/status/dialog-warning.png);
+	}
+	.table-list .table-inprocess td.state span {
+		background-image: url(../../../../../../typo3/sysext/t3skin/images/spinner/f1f1f1.gif);
+	}
+	.table-list .table-processed td.state span {
+		background-image: url(../../../../../../typo3/sysext/t3skin/images/icons/status/dialog-ok.png);
+	}
+	.table-list .table-processed-failed td.state span {
+		background-image: url(../../../../../../typo3/sysext/t3skin/images/icons/status/dialog-error.png);
+	}
+.table-list td.control {
+	text-align: center;
+}
+
+
+.x-progress-text {
+	text-align: left;
+}

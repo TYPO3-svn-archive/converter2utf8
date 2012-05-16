@@ -1,0 +1,151 @@
+<!-- ###TEMPLATE_JQINCLUDECORE### begin -->
+<script type="text/javascript" src="###PATH2TEMPLATE######JQUERYLIB###"></script>
+<!-- ###TEMPLATE_JQINCLUDECORE### end -->
+
+
+
+<!-- ###TEMPLATE_TABLELIST### begin -->
+<form action="###ACTION###" method="get">
+	<table class="table-list  x-grid3">
+		<thead>
+			<tr class="x-grid3-header">
+				<th colspan="2">###HEAD_TABLE###</th>
+				<th>###HEAD_INFORMATION###</th>
+				<th>###HEAD_EXCLUDE###</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- ###TEMPLATE_TABLELIST_ITEM### begin -->
+			<tr id="###TABLENAME###" class="###TABLECLASS### ###EVENODD###">
+				<th>###TABLEINFO###</th>
+				<td class="state"><span></span></td>
+				<td class="information">###INFORMATION###</td>
+				<td class="control">
+					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### begin -->
+					<input name="###TABLENAME###" type="checkbox" value="1" />
+					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### end -->
+				</td>
+			</tr>
+			<!-- ###TEMPLATE_TABLELIST_ITEM### end -->
+		</tbody>
+	</table>
+
+	<div style="position:fixed; top:10px; right:10px; width:300px;">
+		<div class="typo3-message message-information">
+			<div class="message-header">###UPDATERMSGHEADER###</div>
+			<div class="message-body">
+				###UPDATERMSG###<br />
+				<input type="button" value="###SUBMIT###" style="width: 250px" />
+
+				<div class="x-progress-wrap left-align" style="width: 248px; height: 19px; display: none;">
+					<div class="x-progress-inner">
+						<div class="x-progress-bar" style="height: 17px; width: 9px;">
+							<div class="x-progress-text" style="z-index: 99; width: 0;">
+								<div style="width: 250px; height: 19px;"></div>
+							</div>
+						</div>
+						<div class="x-progress-text x-progress-text-back">
+							<div style="width: 250px; height: 19px;"></div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+</form>
+
+<!-- ###TEMPLATE_TABLELIST### end -->
+
+
+
+<!-- ###TEMPLATE_JQINCLUDECSS### begin -->
+<script type="text/javascript">/* <![CDATA[ */
+jQuery.noConflict();
+(function($) {
+	$(document).ready(function() {
+			//  include styles
+		$('head').append('<link rel="stylesheet" type="text\/css" href="..\/typo3conf\/ext\/converter2utf8\/res\/template\/css\/ext_update.css" />');
+
+			//  exclude tables
+		$('input:checkbox').click(function() {
+			$(this).parents('tr')/*.toggleClass('table-process')*/.toggleClass('table-excluded');
+		});
+
+			//  process
+		tableProcess = $('.table-process');
+		$('input:button').click(function() {
+			$('input:button, .x-progress-wrap').toggle();
+
+			url          = $(this).parents('form').attr('action');
+			tableNumbers = tableProcess.length;
+			processTable(0);
+		});
+
+			//  progress bar
+		progressWidth = $('.x-progress-wrap').css('width');
+		progressWidth = parseInt(progressWidth);
+
+			//  process table
+		function processTable(index) {
+				//  stop if loop finished
+			if (index >= tableNumbers) {
+				$('input:button, .x-progress-wrap').toggle();
+alert('done!');
+				return;
+			}
+
+			progressUpdate(index);
+
+				//  process item
+			var item      = tableProcess.get(index);
+			var tableName = $(item).find('input').attr('name');
+			var offset    = $(item).offset();
+			var scrollTo  = offset.top;
+///			$(item).find('td.information').append(' [' + scrollTo + ']');
+			$('html,body').animate({scrollTop: scrollTo}, 1000);
+///			var itemUrl   = url + '?command=process&table=' + tableName;
+
+				//  display item as in process
+			$(item).addClass('table-inprocess');
+				//  start processing
+			$.ajax({
+				url:      url,
+				type:     'POST',
+				data:     {
+					'command': 'process',
+					'table':   tableName,
+				},
+				success:  function(data, success, xhr) {
+					$(item).removeClass('table-inprocess');
+					if (data == 'ok') {
+						$(item).addClass('table-processed');
+					} else {
+						$(item).addClass('table-processed-failed');
+					}
+				},
+				complete: function() {
+						//  process next item
+					index++;
+					processTable(index);
+				},
+			});
+		}
+
+			//  update progress bar
+		function progressUpdate(index) {
+			var progress          = parseFloat(index / tableProcess.length);
+			var progressTextWidth = parseInt(progressWidth * progress);
+			var progressBarWidth  = progressTextWidth + 9;
+			var progressMessage   = '###CONVERTING### ###TABLE### ' + index + ' ###OF### ' + tableProcess.length;
+			$('.x-progress-bar .x-progress-text, .x-progress-text-back').html(progressMessage);
+			$('.x-progress-bar').animate({
+				width: progressBarWidth + 'px'
+			}, 300).find('.x-progress-text').animate({
+				width: progressTextWidth + 'px'
+			}, 300);
+		}
+	});
+})(jQuery);
+/* ]]> */</script>
+<!-- ###TEMPLATE_JQINCLUDECSS### end -->

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description>Language labels for converter2utf8</description>
+		<type>module</type>
+		<csh_table></csh_table>
+		<fileId>EXT:converter2utf8/locallang.xml</fileId>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="updater.head.table">Table</label>
+			<label index="updater.head.information">Information</label>
+			<label index="updater.head.exclude">Exclude?</label>
+			<label index="updater.noTCA">No table configuration in TCA</label>
+			<label index="updater.noContent">Table has no content</label>
+			<label index="updater.hasContent">Table has %d entries</label>
+
+			<label index="updater.process.convert">Convert!</label>
+			<label index="updater.process.converting">Converting</label>
+			<label index="updater.process.of">of</label>
+
+			<label index="updater.error.noTemplate">Template error: File %s not found!</label>
+			<label index="updater.error.dbShowTables">DB Error, tables can't be displayed: %s</label>
+			<label index="updater.error.dbCountRows">DB Error, rows can't be counted: %s</label>
+		</languageKey>
+
+		<languageKey index="de" type="array">
+			<label index="updater.head.table">Tabelle</label>
+			<label index="updater.head.information">Information</label>
+			<label index="updater.head.exclude">Ausschließen?</label>
+			<label index="updater.noTCA">Keine Tabelleninformation im TCA</label>
+			<label index="updater.noContent">Tabelle hat keinen Inhalt</label>
+			<label index="updater.hasContent">Tabelle hat %d Einträge</label>
+
+			<label index="updater.process.convert">Konvertieren!</label>
+			<label index="updater.process.converting">Konvertiere</label>
+			<label index="updater.process.of">von</label>
+
+			<label index="updater.error.noTemplate">Template Fehler: Datei %s nicht gefunden!</label>
+			<label index="updater.error.dbShowTables">DB Fehler, Tabellen können nicht angezeigt werden: %s</label>
+			<label index="updater.error.dbCountRows">DB Fehler, Zeilen können nicht gezählt werden: %s</label>
+		</languageKey>
+	</data>
+</T3locallang>
