@@ -1,5 +1,4 @@
 <?php
-
 /***************************************************************
  *  Copyright notice
  *
@@ -40,19 +39,22 @@
  * @subpackage converter2utf8
  */
 class ext_update {
-	protected $extKey       = 'converter2utf8';                        // The extension key.
-	protected $extPath;                                                //  absolute path to the extension
-	protected $extRelPath;                                             //  relative path to the extension
+	protected $extKey       = 'converter2utf8';                         //  The extension key.
+	protected $extName      = 'UTF-8 Converter';                        //  The extension name.
+	protected $extPath;                                                 //  absolute path to the extension
+	protected $extRelPath;                                              //  relative path to the extension
 
-	protected $templateDir  = 'res/template/';                         //  path to template directory
-	protected $templateHTML = 'ext_update.tmpl.html';                  //  HTML template file
-	protected $jQueryLib    = 'js/jquery-1.7.2.min.js';                //  jQuery core
-	protected $templateCSS  = 'css/ext_update.css';                    //  stylesheet
-	protected $locallangXML = 'LLL:EXT:converter2utf8/locallang.xml';  //  locallang xml
+	protected $extConf      = array();                                  //  extension configuration
+	protected $templateDir  = 'res/template/';                          //  path to template directory
+	protected $templateHTML = 'ext_update.tmpl.html';                   //  HTML template file
+	protected $jQueryLib    = 'js/jquery-1.7.2.min.js';                 //  jQuery core
+	protected $templateCSS  = 'css/ext_update.css';                     //  stylesheet
+	protected $locallangXML = 'LLL:EXT:converter2utf8/locallang.xml';   //  locallang xml
 
-	protected $template;                                               //  content of template file
-	protected $tables       = array();                                 //  tables in db
-	protected $content;                                                //  content output
+	protected $template;                                                //  content of template file
+	protected $tables       = array();                                  //  tables in db
+	protected $backupPrefix = 'zzz_backup_converter2utf8_';             //  prefix for backuped tables
+	protected $content;                                                 //  content output
 
 
 	/**
@@ -64,14 +66,24 @@ class ext_update {
 ## $sql = 'SHOW CHARACTER SET';
 		$content = '';
 
-		if (empty ($_GET['command'])) {
+		if (empty ($_REQUEST['command'])) {
 			$_GET['command'] = '';
 		}
-		switch ($_GET['command']) {
-		case 'process':
-			$this->process();
-			break;
+		switch ($_REQUEST['command']) {
 		case 'exclude':
+			$this
+				->getTableList()
+				->excludeTable();
+			break;
+		case 'backup':
+			$this
+				->getTableList()
+				->backupTable();
+			break;
+		case 'convert':
+			$this
+				->getTableList()
+				->convertTable();
 			break;
 		default:
 			$this
@@ -130,7 +142,7 @@ class ext_update {
 
 		if (!file_exists($templateFile)) {
 				##  @ToDo: change die() with displayMessage()
-			$msg = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.error.noTemplate');
+			$msg = $GLOBALS['LANG']->sL($this->locallangXML . ':error.noTemplate');
 			die(sprintf($msg, $templateFile));
 		} else {
 			$this->template = file_get_contents($templateFile);
@@ -150,11 +162,14 @@ class ext_update {
 	 */
 	protected function includeJQuery($includeCSS = TRUE) {
 		$markerArray  = array(
-			'###PATH2TEMPLATE###' => $this->extRelPath . $this->templateDir,
-			'###JQUERYLIB###'     => $this->jQueryLib,
-			'###CONVERTING###'    => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.process.converting'),
-			'###TABLE###'         => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.head.table'),
-			'###OF###'            => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.process.of'),
+			'###PATH2TEMPLATE###'  => $this->extRelPath . $this->templateDir,
+			'###JQUERYLIB###'      => $this->jQueryLib,
+			'###CONVERTING###'     => $GLOBALS['LANG']->sL($this->locallangXML . ':process.converting'),
+			'###TABLE###'          => $GLOBALS['LANG']->sL($this->locallangXML . ':head.table'),
+			'###OF###'             => $GLOBALS['LANG']->sL($this->locallangXML . ':process.of'),
+			'###BACKUP_DONE###'    => $GLOBALS['LANG']->sL($this->locallangXML . ':success.backupDone'),
+			'###BACKUP_FAILED###'  => $GLOBALS['LANG']->sL($this->locallangXML . ':error.backupFailed'),
+			'###CONVERT_DONE###'   => $GLOBALS['LANG']->sL($this->locallangXML . ':success.convertDone'),
 		);
 
 		$templateJQcore = t3lib_parsehtml::getSubpart($this->template, '###TEMPLATE_JQINCLUDECORE###');
@@ -179,17 +194,12 @@ class ext_update {
 	 * @since 0.1.0
 	 */
 	protected function getTableList() {
-		$sql = 'SHOW TABLES';
-		$res = $GLOBALS['TYPO3_DB']->sql_query($sql);
-		if (!$res) {
-				##  @ToDo: change die() with displayMessage()
-			$msg = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.error.dbShowTables');
-			die(sprintf($msg, $GLOBALS['TYPO3_DB']->sql_error()));
+		$tables = $GLOBALS['TYPO3_DB']->admin_get_tables();
+		foreach ($tables as $tKey => $tVal) {
+			if (!preg_match('/^' . $this->backupPrefix . '/', $tKey)) {
+				$this->tables[] = $tKey;
+			}
 		}
-		while ($row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res)) {
-			$this->tables[] = $row[0];
-		}
-		$GLOBALS['TYPO3_DB']->sql_free_result($res);
 
 		return $this;
 	}
@@ -205,12 +215,13 @@ class ext_update {
 	protected function displayTableList() {
 		$templateList     = t3lib_parsehtml::getSubpart($this->template, '###TEMPLATE_TABLELIST###');
 		$markerArray = array(
-			'###HEAD_TABLE###'        => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.head.table'),
-			'###HEAD_INFORMATION###'  => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.head.information'),
-			'###HEAD_EXCLUDE###'      => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.head.exclude'),
-		###	'###ACTION###'            => htmlspecialchars($_SERVER['REQUEST_URI']),
-			'###ACTION###'            => '/typo3conf/ext/converter2utf8/test.php',
-			'###SUBMIT###'            => $GLOBALS['LANG']->sL($this->locallangXML . ':updater.process.convert'),
+			'###HEAD_TABLE###'        => $GLOBALS['LANG']->sL($this->locallangXML . ':head.table'),
+			'###HEAD_INFORMATION###'  => $GLOBALS['LANG']->sL($this->locallangXML . ':head.information'),
+			'###HEAD_EXCLUDE###'      => $GLOBALS['LANG']->sL($this->locallangXML . ':head.exclude'),
+			'###ACTION###'            => htmlspecialchars($_SERVER['REQUEST_URI']),
+		###	'###ACTION###'            => '/typo3conf/ext/converter2utf8/test.php',
+			'###PROCESS_BACKUP###'    => $GLOBALS['LANG']->sL($this->locallangXML . ':process.backup'),
+			'###PROCESS_CONVERT###'   => $GLOBALS['LANG']->sL($this->locallangXML . ':process.convert'),
 		);
 		$templateList     = t3lib_parsehtml::substituteMarkerArray($templateList, $markerArray);
 		$templateListItem = t3lib_parsehtml::getSubpart($templateList,   '###TEMPLATE_TABLELIST_ITEM###');
@@ -236,18 +247,18 @@ class ext_update {
 			if ($hasTCA === FALSE) {
 				$process = FALSE;
 				$markerArray['###TABLECLASS###']    = 'table-skipped';
-				$markerArray['###INFORMATION###'][] = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.noTCA');
+				$markerArray['###INFORMATION###'][] = $GLOBALS['LANG']->sL($this->locallangXML . ':noTCA');
 			} else {
 					//  has this table content?
 				$numRows = $this->countRows($tVal);
 				if (empty ($numRows)) {
 					$process = FALSE;
 					$markerArray['###TABLECLASS###']    = 'table-skipped';
-					$markerArray['###INFORMATION###'][] = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.noContent');
+					$markerArray['###INFORMATION###'][] = $GLOBALS['LANG']->sL($this->locallangXML . ':noContent');
 				} else {
 						//  display table as processable
 					$markerArray['###TABLECLASS###']    = 'table-process';
-					$msg = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.hasContent');
+					$msg = $GLOBALS['LANG']->sL($this->locallangXML . ':hasContent');
 					$markerArray['###INFORMATION###'][] = sprintf($msg, $numRows);
 				}
 				$markerArray['###TABLEINFO###']     = '<img src="' . $hasTCA['iconfile'] . '" />'
@@ -328,7 +339,7 @@ class ext_update {
 		$res = $GLOBALS['TYPO3_DB']->sql_query($sql);
 		if (!$res) {
 				##  @ToDo: change die() with displayMessage()
-		    $msg = $GLOBALS['LANG']->sL($this->locallangXML . ':updater.error.dbCountRows');
+		    $msg = $GLOBALS['LANG']->sL($this->locallangXML . ':error.dbCountRows');
 			die(sprintf($msg, $GLOBALS['TYPO3_DB']->sql_error()));
 		}
 		$ftc = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
@@ -340,16 +351,123 @@ class ext_update {
 
 
 	/**
-	 * load template file
+	 * create a table backup
 	 *
-	 * @return string     HTML wrapped message
+	 * @return string     success message
 	 * @access protected
 	 * @since 0.1.0
 	 */
-	protected function process() {
+	protected function backupTable() {
+		if (!empty ($_REQUEST['table'])) {
+			$table  = $_REQUEST['table'];
+			$backup = $this->backupPrefix . $table;
+		} else {
+			die($GLOBALS['LANG']->sL($this->locallangXML . ':error.noParameterTable'));
+		}
+
+			//  get create statement
+		$sql = 'SHOW CREATE TABLE ' . $GLOBALS['TYPO3_DB']->quoteStr($table, $table);
+		$res = $GLOBALS['TYPO3_DB']->sql_query($sql);
+		if (!$res) {
+				##  @ToDo: change die() with displayMessage()
+		    $msg = $GLOBALS['LANG']->sL($this->locallangXML . ':error.dbShowCreate');
+			die(sprintf($msg, $GLOBALS['TYPO3_DB']->sql_error()));
+		}
+		$ftc = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
+		$GLOBALS['TYPO3_DB']->sql_free_result($res);
+
+			//  delete backup table
+		$sql = 'DROP TABLE IF EXISTS ' . $backup;
+		$GLOBALS['TYPO3_DB']->sql_query($sql);
+			//  create backup table
+		$sql = $ftc['Create Table'];
+				//  replace table name (but not field names with same value)
+		$firstLineOri = substr($sql, 0, (15 + strlen($table)));
+		$firstLineNew = strtr($firstLineOri, array($table => $backup));
+		$sql = strtr($sql, array($firstLineOri => $firstLineNew));
+		$res = $GLOBALS['TYPO3_DB']->sql_query($sql);
+		if (!$res) {
+				##  @ToDo: change die() with displayMessage()
+		    $msg = $GLOBALS['LANG']->sL($this->locallangXML . ':error.dbCreateBackupTable');
+			die(sprintf($msg, $GLOBALS['TYPO3_DB']->sql_error()));
+		}
+
+			//  copy data
+		$sql = 'INSERT INTO ' . $backup . '
+				SELECT * FROM ' . $table;
+		$res = $GLOBALS['TYPO3_DB']->sql_query($sql);
+		if (!$res) {
+				##  @ToDo: change die() with displayMessage()
+		    $msg = $GLOBALS['LANG']->sL($this->locallangXML . ':error.dbInsertSelect');
+			die(sprintf($msg, $GLOBALS['TYPO3_DB']->sql_error()));
+		} else {
+			echo 'ok';
+			exit;
+		}
+	}
+
+
+	/**
+	 * convert table
+	 *
+	 * @return string     success message
+	 * @access protected
+	 * @since 0.1.0
+	 */
+	protected function convertTable() {
 		sleep(2);
 		echo 'ok';
 		exit;
+	}
+
+
+	/**
+	 * mark table as excluded in localconf.php
+	 *
+	 * @return string     success message
+	 * @access protected
+	 * @since 0.1.0
+	 */
+	protected function excludeTable() {
+		sleep(2);
+		echo 'ok';
+		exit;
+	}
+
+
+	/**
+	 * Get the extension configuration
+	 *
+	 * @return array
+	 * @return obj     $this
+	 */
+	protected function getExtConf() {
+		$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$this->extKey]);
+		if (!empty ($extConf)) {
+			$this->extConf = $extConf;
+		}
+
+		return $this;
+	}
+
+
+	/**
+	 * Write back configuration
+	 *
+	 * @param array $extConf
+	 * @return void
+	 * @see EXT:caretaker_instance/class.ext_update.php
+	 */
+	protected function writeExtConf($extConf) {
+		$install = new t3lib_install();
+		$install->allowUpdateLocalConf = 1;
+		$install->updateIdentity = $this->extName;
+
+		$lines = $install->writeToLocalconf_control();
+		$install->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'EXT\'][\'extConf\'][\'' . $this->extKey . '\']', serialize($extConf));
+		$install->writeToLocalconf_control($lines);
+
+		t3lib_extMgm::removeCacheFiles();
 	}
 
 
@@ -358,23 +476,60 @@ class ext_update {
 	 *
 	 * @param  string     type of message
 	 * @param  string     message content
+	 * @param  string     message container position style
 	 * @return string     HTML wrapped message
 	 * @access protected
 	 * @since 0.1.0
 	 */
-	protected function displayMessage($type, $msg) {
-		$content = '
-		<div style="padding:15px 15px 20px 0;">
-			<div class="typo3-message message-warning">
-   				<div class="message-header">###HEADER###</div>
-  				<div class="message-body">###MESSAGE###</div>
-			</div>
-		</div>';
+	protected function displayMessage($type, array $msg, $styleposition = '') {
+		$this
+			->getPaths()
+			->loadTemplate();
+
+		$markerArray  = array(
+			'###STYLEPOSITION###'  => $styleposition,
+			'###MESSAGETYPE###'    => $type,
+			'###MESSAGEHEADER###'  => $msg['header'],
+			'###MESSAGEBODY###'    => $msg['body'],
+		);
+
+		$templateTypo3Message = t3lib_parsehtml::getSubpart($this->template, '###TEMPLATE_TYPO3MESSAGE###');
+		$content              = t3lib_parsehtml::substituteMarkerArray($templateTypo3Message, $markerArray);
 
 		return $content;
 	}
 
 
+	/**
+	 * Message in EM with link to updater Script
+	 *
+	 * @return string     HTML wrapped message
+	 * @access protected
+	 * @since 0.1.0
+	 */
+	function emDisplayStartConversionMessage(&$params, &$tsObj) {
+		$this
+			->getPaths()
+			->loadTemplate();
+
+		$type = 'information';
+		if (t3lib_div::int_from_ver(TYPO3_version) < 4005000) {
+			$link = 'index.php?&amp;id=0&amp;CMD[showExt]=' . $this->extKey . '&amp;SET[singleDetails]=updateModule';
+		} else {
+			$link = 'mod.php?&amp;id=0&amp;M=tools_em&amp;CMD[showExt]=' . $this->extKey . '&amp;SET[singleDetails]=updateModule';
+		}
+		$msg  = array(
+			'header'        => 'Header',
+			'body'          => '
+  					' . /*$GLOBALS['LANG']->sL($this->locallangXML . ':error.noTemplate') .*/ '<br />
+  					<a style="text-decoration:underline;" href="' . $link . '">
+  					' . $GLOBALS['LANG']->sL($this->locallangXML . ':em.updateMessageLink') . '</a>',
+		);
+		$styleposition = 'position: absolute; top:10px; right:10px; z-index: 10000;';
+		$content = $this->displayMessage($type, $msg, $styleposition);
+
+		return $content;
+	}
 }
 
 

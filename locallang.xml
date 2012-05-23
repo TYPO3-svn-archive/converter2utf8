@@ -8,37 +8,64 @@
 	</meta>
 	<data type="array">
 		<languageKey index="default" type="array">
-			<label index="updater.head.table">Table</label>
-			<label index="updater.head.information">Information</label>
-			<label index="updater.head.exclude">Exclude?</label>
-			<label index="updater.noTCA">No table configuration in TCA</label>
-			<label index="updater.noContent">Table has no content</label>
-			<label index="updater.hasContent">Table has %d entries</label>
+			<label index="em.tables">Tables</label>
+			<label index="em.tablesExclude">Exclude Tables: Tables which should not be converted (may be complemented by Update Script)</label>
+			<label index="em.tablesProcessed">Processed Tables: Tables which are already converted (set by Update Script automatically while processing)</label>
+			<label index="em.logging">Developer Log</label>
+			<label index="em.enableDevlog">Enable Logging: Messages will be written to DevLog (you need the extension devlog).</label>
+<label index="em.updateMessage">Updater</label>
+<label index="em.updateMessageLink">[Click here to open the updater]</label>
 
-			<label index="updater.process.convert">Convert!</label>
-			<label index="updater.process.converting">Converting</label>
-			<label index="updater.process.of">of</label>
+			<label index="head.table">Table</label>
+			<label index="head.information">Information</label>
+			<label index="head.exclude">Exclude?</label>
+			<label index="noTCA">No table configuration in TCA</label>
+			<label index="noContent">Table has no content</label>
+			<label index="hasContent">Table has %d entries</label>
 
-			<label index="updater.error.noTemplate">Template error: File %s not found!</label>
-			<label index="updater.error.dbShowTables">DB Error, tables can't be displayed: %s</label>
-			<label index="updater.error.dbCountRows">DB Error, rows can't be counted: %s</label>
+			<label index="process.backup">Create backup</label>
+			<label index="process.convert">Convert!</label>
+			<label index="process.converting">Converting</label>
+			<label index="process.of">of</label>
+
+			<label index="error.noTemplate">Template error: File %s not found!</label>
+<label index="error.noParameterTable">Error: parameter 'table' must not be empty!</label>
+			<label index="error.dbShowTables">DB Error, tables can't be displayed: %s</label>
+			<label index="error.dbCountRows">DB Error, rows can't be counted: %s</label>
+<label index="error.dbShowCreate">DB Error, Create Table Statement failed: %s</label>
+<label index="error.dbCreateBackupTable">DB Error, Create Backup Table failed: %s</label>
+<label index="error.dbInsertSelect">DB Error, Copy Content to Backup Table failed: %s</label>
+
+			<label index="success.backupDone">Backup created</label>
+			<label index="error.backupFailed">Error: Backup failed!</label>
+			<label index="success.convertDone">Conversion complete</label>
 		</languageKey>
 
 		<languageKey index="de" type="array">
-			<label index="updater.head.table">Tabelle</label>
-			<label index="updater.head.information">Information</label>
-			<label index="updater.head.exclude">Ausschließen?</label>
-			<label index="updater.noTCA">Keine Tabelleninformation im TCA</label>
-			<label index="updater.noContent">Tabelle hat keinen Inhalt</label>
-			<label index="updater.hasContent">Tabelle hat %d Einträge</label>
+			<label index="em.tables">Tabellen</label>
+			<label index="em.tablesExclude">Tabellen ausschließen: Tabellen, die nicht kovertiert werden sollen (wird ggf. vom Update Script ergänzt)</label>
+			<label index="em.tablesProcessed">Konvertierte Tabellen: Tabellen, die bereits konvertiert wurden (wird automatisch vom Update Script während Verarbeitung eingetragen)</label>
+			<label index="em.logging">Entwicklerprotokoll</label>
 
-			<label index="updater.process.convert">Konvertieren!</label>
-			<label index="updater.process.converting">Konvertiere</label>
-			<label index="updater.process.of">von</label>
+			<label index="head.table">Tabelle</label>
+			<label index="head.information">Information</label>
+			<label index="head.exclude">Ausschließen?</label>
+			<label index="noTCA">Keine Tabelleninformation im TCA</label>
+			<label index="noContent">Tabelle hat keinen Inhalt</label>
+			<label index="hasContent">Tabelle hat %d Einträge</label>
 
-			<label index="updater.error.noTemplate">Template Fehler: Datei %s nicht gefunden!</label>
-			<label index="updater.error.dbShowTables">DB Fehler, Tabellen können nicht angezeigt werden: %s</label>
-			<label index="updater.error.dbCountRows">DB Fehler, Zeilen können nicht gezählt werden: %s</label>
+			<label index="process.backup">Backup erstellen</label>
+			<label index="process.convert">Konvertieren!</label>
+			<label index="process.converting">Konvertiere</label>
+			<label index="process.of">von</label>
+
+			<label index="error.noTemplate">Template Fehler: Datei %s nicht gefunden!</label>
+			<label index="error.dbShowTables">DB Fehler, Tabellen können nicht angezeigt werden: %s</label>
+			<label index="error.dbCountRows">DB Fehler, Zeilen können nicht gezählt werden: %s</label>
+
+			<label index="success.backupDone">Backup erstellt</label>
+			<label index="error.backupFailed">Fehler: Backup fehlgeschlagen!</label>
+			<label index="success.convertDone">Konvertierung abgeschlossen</label>
 		</languageKey>
 	</data>
 </T3locallang>

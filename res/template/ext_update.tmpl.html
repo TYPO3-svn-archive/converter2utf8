@@ -11,7 +11,8 @@
 			<tr class="x-grid3-header">
 				<th colspan="2">###HEAD_TABLE###</th>
 				<th>###HEAD_INFORMATION###</th>
-				<th>###HEAD_EXCLUDE###</th>
+				<th><input type="checkbox" id="toggleExclude" value="1" />
+					<label for="toggleExclude">###HEAD_EXCLUDE###</label></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -22,7 +23,7 @@
 				<td class="information">###INFORMATION###</td>
 				<td class="control">
 					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### begin -->
-					<input name="###TABLENAME###" type="checkbox" value="1" />
+					<input name="###TABLENAME###" type="checkbox" value="1" class="table-skip" />
 					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### end -->
 				</td>
 			</tr>
@@ -30,12 +31,14 @@
 		</tbody>
 	</table>
 
-	<div style="position:fixed; top:10px; right:10px; width:300px;">
+	<div style="position:fixed; top:20px; right:20px; width:300px; z-index: 10000;">
 		<div class="typo3-message message-information">
 			<div class="message-header">###UPDATERMSGHEADER###</div>
 			<div class="message-body">
 				###UPDATERMSG###<br />
-				<input type="button" value="###SUBMIT###" style="width: 250px" />
+				<input type="checkbox" name="backup" id="backup" checked="checked" />
+					<label for="backup">###PROCESS_BACKUP###</label>
+				<input type="button" value="###PROCESS_CONVERT###" style="width: 250px" />
 
 				<div class="x-progress-wrap left-align" style="width: 248px; height: 19px; display: none;">
 					<div class="x-progress-inner">
@@ -65,28 +68,81 @@ jQuery.noConflict();
 (function($) {
 	$(document).ready(function() {
 			//  include styles
-		$('head').append('<link rel="stylesheet" type="text\/css" href="..\/typo3conf\/ext\/converter2utf8\/res\/template\/css\/ext_update.css" />');
-
-			//  exclude tables
-		$('input:checkbox').click(function() {
-			$(this).parents('tr')/*.toggleClass('table-process')*/.toggleClass('table-excluded');
+	//	$('head').append('<link rel="stylesheet" type="text\/css" href="..\/typo3conf\/ext\/converter2utf8\/res\/template\/css\/ext_update.css" />');
+		$.get('..\/typo3conf\/ext\/converter2utf8\/res\/template\/css\/ext_update.css', function(css) {
+			$('head').append('<style type="text\/css">' + css + '<\/style>');
 		});
 
-			//  process
-		tableProcess = $('.table-process');
-		$('input:button').click(function() {
-			$('input:button, .x-progress-wrap').toggle();
-
-			url          = $(this).parents('form').attr('action');
-			tableNumbers = tableProcess.length;
-			processTable(0);
+			//  exclude tables manually
+		$('input.table-skip').click(function() {
+			toggleParentRow(this);
+		}).change(function() {
+			toggleParentRow(this);
 		});
+			//  toggle all exclude checkboxes
+		$('#toggleExclude').click(function() {
+			var isChecked = $(this).is(':checked');
+			$('input.table-skip').attr('checked', isChecked).each(function() {
+				toggleParentRow(this);
+			});
+		});
+
+			//  setup
+		$.ajaxSetup({
+			url:  $('form').attr('action'),
+			type: 'POST',
+		});
+		tableProcess   = $('.table-process');
+		tableNumbers   = tableProcess.length;
+		viewportHeight = $(window).height();
+		$(window).resize(function() {
+			viewportHeight = $(window).height();
+		});
+
 
 			//  progress bar
 		progressWidth = $('.x-progress-wrap').css('width');
 		progressWidth = parseInt(progressWidth);
 
-			//  process table
+			//  process
+		$('input:button').click(function() {
+			backup = $('#backup').is(':checked');
+
+			$('input:button, .x-progress-wrap').toggle();
+				//  hide skipped items
+			$('.table-skipped').fadeOut(1000);
+				//  start process for first table
+			window.setTimeout(processTable(0), 1000);
+		});
+
+
+
+		/**
+		 * exclude table
+		 *
+		 * @param  obj     current acting jQuery object
+		 * @return void
+		 * @since 0.1.0
+		 */
+		function toggleParentRow(obj, isChecked) {
+			var isChecked = $(obj).is(':checked');
+			var parentRow = $(obj).parents('tr');
+			if (isChecked == true) {
+				parentRow/*.toggleClass('table-process')*/.addClass('table-excluded');
+			} else {
+				parentRow/*.toggleClass('table-process')*/.removeClass('table-excluded');
+			}
+		}
+
+
+
+		/**
+		 * process table
+		 *
+		 * @param  int     index of table to process
+		 * @return void
+		 * @since 0.1.0
+		 */
 		function processTable(index) {
 				//  stop if loop finished
 			if (index >= tableNumbers) {
@@ -95,31 +151,90 @@ alert('done!');
 				return;
 			}
 
+				//  process item
+			var item       = tableProcess.get(index);
+			var itemCheck  = $(item).find('input');
+			var tableName  = itemCheck.attr('name');
+			var exclude    = itemCheck.is(':checked');
+			var offset     = $(item).offset();
+			var itemHeight = $(item).height();
+			var scrollTo   = offset.top - viewportHeight + itemHeight;
+
+				//  scroll active item into viewport
+//			$(item).find('td.information').append(' [' + scrollTo + ']');
+			$('html,body')/*.delay(1000)*/.animate({scrollTop: scrollTo}, 500);
+
+				//  progress bar update
 			progressUpdate(index);
 
-				//  process item
-			var item      = tableProcess.get(index);
-			var tableName = $(item).find('input').attr('name');
-			var offset    = $(item).offset();
-			var scrollTo  = offset.top;
-///			$(item).find('td.information').append(' [' + scrollTo + ']');
-			$('html,body').animate({scrollTop: scrollTo}, 1000);
-///			var itemUrl   = url + '?command=process&table=' + tableName;
-
-				//  display item as in process
-			$(item).addClass('table-inprocess');
 				//  start processing
+					//  display item as in process
+			$(item).addClass('table-inprocess');
+			if (backup == true && exclude == false) {
+					//  backup + conversion
+				processBackupTable(item, tableName, index, exclude);
+			} else {
+					//  conversion (without backup)
+				processConvertTable(item, tableName, index, exclude);
+			}
+		}
+
+
+		/**
+		 * process table: backup
+		 *
+		 * @param  obj     row in tables list
+		 * @param  string  table to convert
+		 * @param  int     index of table to process
+		 * @param  bool    exclude (only used in function call processConvertTable())
+		 * @return void
+		 * @since 0.1.0
+		 */
+		function processBackupTable(item, tableName, index, exclude) {
 			$.ajax({
-				url:      url,
-				type:     'POST',
 				data:     {
-					'command': 'process',
+					'command': 'backup',
+					'table':   tableName,
+				},
+				success: function(data, success, xhr) {
+					if (data == 'ok') {
+					//	$(item).find('td.information').html('###BACKUP_DONE###');
+						$(item).find('td.information').append('<br \/>###BACKUP_DONE###');
+					} else {
+						$(item)
+							.addClass('table-processed-failed')
+							.find('td.information').html('###BACKUP_FAILED###');
+					}
+						//  conversion
+					processConvertTable(item, tableName, index, exclude);
+				},
+			});
+		}
+
+
+		/**
+		 * process table: Conversion
+		 *
+		 * @param  obj     row in tables list
+		 * @param  string  table to convert
+		 * @param  int     index of table to process
+		 * @return void
+		 * @since 0.1.0
+		 */
+		function processConvertTable(item, tableName, index, exclude) {
+				//  convert
+			$.ajax({
+				data: {
+					'command': (exclude == false) ? 'convert' : 'exclude',
 					'table':   tableName,
 				},
 				success:  function(data, success, xhr) {
 					$(item).removeClass('table-inprocess');
 					if (data == 'ok') {
-						$(item).addClass('table-processed');
+						$(item)
+							.addClass('table-processed')
+						//	.find('td.information').html('###CONVERT_DONE###');
+							.find('td.information').append('<br \/>###CONVERT_DONE###');
 					} else {
 						$(item).addClass('table-processed-failed');
 					}
@@ -127,10 +242,11 @@ alert('done!');
 				complete: function() {
 						//  process next item
 					index++;
-					processTable(index);
+					window.setTimeout(processTable(index), 500);
 				},
 			});
 		}
+
 
 			//  update progress bar
 		function progressUpdate(index) {
@@ -149,3 +265,14 @@ alert('done!');
 })(jQuery);
 /* ]]> */</script>
 <!-- ###TEMPLATE_JQINCLUDECSS### end -->
+
+
+
+<!-- ###TEMPLATE_TYPO3MESSAGE### begin -->
+<div style="###STYLEPOSITION### padding: 15px 15px 20px 0;">
+	<div class="typo3-message message-###MESSAGETYPE###">
+		<div class="message-header">###MESSAGEHEADER###</div>
+		<div class="message-body">###MESSAGEBODY###</div>
+	</div>
+</div>
+<!-- ###TEMPLATE_TYPO3MESSAGE### end -->

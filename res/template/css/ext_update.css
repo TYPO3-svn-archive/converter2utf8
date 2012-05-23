@@ -2,7 +2,7 @@
 	border-collapse: collapse;
 	color: #606060;
 }
-.table-list tr:hover {
+.table-list tbody tr:hover {
 	background-color: #dedede;
 }
 	.table-list .table-inprocess {
