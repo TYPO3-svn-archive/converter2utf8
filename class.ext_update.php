@@ -123,6 +123,9 @@ class ext_update {
 	 * @since 0.1.0
 	 */
 	protected function getPaths() {
+$path = get_defined_constants();
+$path = $_SERVER;
+##echo '<pre><b>$path @ ' . __FILE__ . '::' . __LINE__ . ':</b> ' . print_r($path, 1) . '</pre>';exit;
 		$this->extPath    = t3lib_extmgm::extPath($this->extKey);
 		$this->extRelPath = t3lib_extmgm::extRelPath($this->extKey);
 
