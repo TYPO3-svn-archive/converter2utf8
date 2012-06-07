@@ -1,5 +1,9 @@
+	# customsubcategory=charset=LLL:EXT:converter2utf8/locallang.xml:em.charset
 	# customsubcategory=tables=LLL:EXT:converter2utf8/locallang.xml:em.tables
 	# customsubcategory=logging=LLL:EXT:converter2utf8/locallang.xml:em.logging
+
+	# cat=basic/charset/; type=string; label=LLL:EXT:converter2utf8/locallang.xml:em.charsetBefore
+charsetBefore = latin1
 
 	# cat=basic/tables/; type=string; label=LLL:EXT:converter2utf8/locallang.xml:em.tablesExclude
 tablesExclude =
@@ -11,7 +15,7 @@ tablesProcessed =
 enableDevlog = 1
 
 	# cat=basic/dev/1000; type=user[EXT:converter2utf8/class.ext_update.php:ext_update->emDisplayStartConversionMessage]; label=LLL:EXT:converter2utf8/locallang.xml:em.updateMessage
-updateMessage=0
+updateMessage = 0
 
 /*
 # cat=basic/limits/; type=integer; label=Maximum number of rows: Maximum number of rows that should be stored in the log table
@@ -40,7 +44,7 @@ autoCleanup = 0
 */
 
 TSConstantEditor.basic {
-  description = <span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span> Tables which would be ...<br /><br /><span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">2</span> Tables already processed are listed here. If you want to restart converting you have to clean this field.
-  1=tablesExclude
-  2=tablesProcessed
+	description = <span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">1</span> Enter here tables you don't want convert.<br />&nbsp; &nbsp; E. g. if you detect broken content after conversion you can exclude tables here and repeat conversion.<br />&nbsp; &nbsp; You can do this also in the Updater script (next step) by simply selecting check boxes.<br /><br /><span style="background:red; padding:1px 2px; color:#fff; font-weight:bold;">2</span> Tables already processed are listed here. If you want to restart converting you have to clean this field.
+	1           = tablesExclude
+	2           = tablesProcessed
 }

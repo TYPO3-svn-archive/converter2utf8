@@ -63,6 +63,9 @@
 .table-list td.control {
 	text-align: center;
 }
+#toggleExclude {
+	cursor: pointer;
+}
 
 
 .x-progress-text {

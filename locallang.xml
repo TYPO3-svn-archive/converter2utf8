@@ -8,13 +8,20 @@
 	</meta>
 	<data type="array">
 		<languageKey index="default" type="array">
+			<label index="em.charset">Charset</label>
+			<label index="em.charsetBefore">Charset before Conversion</label>
 			<label index="em.tables">Tables</label>
-			<label index="em.tablesExclude">Exclude Tables: Tables which should not be converted (may be complemented by Update Script)</label>
-			<label index="em.tablesProcessed">Processed Tables: Tables which are already converted (set by Update Script automatically while processing)</label>
+			<label index="em.tablesExclude">Exclude Tables: Tables which should not be converted (comma separated list; may be complemented by Update Script)</label>
+			<label index="em.tablesProcessed">Processed Tables: Tables which are already converted (comma separated list; set by Update Script automatically while processing)</label>
 			<label index="em.logging">Developer Log</label>
 			<label index="em.enableDevlog">Enable Logging: Messages will be written to DevLog (you need the extension devlog).</label>
-<label index="em.updateMessage">Updater</label>
-<label index="em.updateMessageLink">[Click here to open the updater]</label>
+			<label index="em.updateMessage">Updater</label>
+			<label index="em.updateMessageHeader">Updater</label>
+			<label index="em.adminOnlyMessageHeader">Error</label>
+			<label index="em.adminOnlyMessageWarning">Everyone can login on Backend</label>
+			<label index="em.adminOnlyMessageSolution">Set [BE][adminOnly] to "1" to protect your database content against editing during conversion</label>
+			<label index="em.updateMessageWarning">Configuration is empty<![CDATA[<br />]]>Please save this configuration form!</label>
+			<label index="em.updateMessageLink">[Click here to open the updater]</label>
 
 			<label index="head.table">Table</label>
 			<label index="head.information">Information</label>
@@ -23,29 +30,46 @@
 			<label index="noContent">Table has no content</label>
 			<label index="hasContent">Table has %d entries</label>
 
+			<label index="process.updaterMsgHeader">Start Conversion</label>
+			<label index="process.updaterMsg">You do the conversion at you own risk!</label>
 			<label index="process.backup">Create backup</label>
 			<label index="process.convert">Convert!</label>
 			<label index="process.converting">Converting</label>
 			<label index="process.of">of</label>
+			<label index="process.restore">Restore!</label>
 
 			<label index="error.noTemplate">Template error: File %s not found!</label>
-<label index="error.noParameterTable">Error: parameter 'table' must not be empty!</label>
-			<label index="error.dbShowTables">DB Error, tables can't be displayed: %s</label>
-			<label index="error.dbCountRows">DB Error, rows can't be counted: %s</label>
-<label index="error.dbShowCreate">DB Error, Create Table Statement failed: %s</label>
-<label index="error.dbCreateBackupTable">DB Error, Create Backup Table failed: %s</label>
-<label index="error.dbInsertSelect">DB Error, Copy Content to Backup Table failed: %s</label>
+			<label index="error.noParameterTable">Error: parameter 'table' must not be empty!</label>
+			<label index="error.invalidParameterTable">Error: parameter 'table' is not valid!</label>
+			<label index="error.tableAlreadyProcessed">Error: Table already processed!</label>
+			<label index="error.dbShowTables">DB Error: tables can't be displayed: %s</label>
+			<label index="error.dbCountRows">DB Error: rows can't be counted: %s</label>
+			<label index="error.dbShowCreate">DB Error: Create Table Statement failed: %s</label>
+			<label index="error.dbCreateBackupTable">DB Error: Create Backup Table failed: %s</label>
+			<label index="error.dbInsertSelect">DB Error: Copy Content to Backup Table failed: %s</label>
+			<label index="error.dbShowColumns">DB Error: "SHOW COLUMNS FROM _table_" failed: %s</label>
+			<label index="error.dbAlterTable">DB Error: "ALTER TABLE ..." failed: %s</label>
 
 			<label index="success.backupDone">Backup created</label>
-			<label index="error.backupFailed">Error: Backup failed!</label>
+		<!-- 	<label index="error.backupFailed">Error: Backup failed!</label> -->
 			<label index="success.convertDone">Conversion complete</label>
+			<label index="success.excludeDone">Table marked as excluded</label>
 		</languageKey>
 
 		<languageKey index="de" type="array">
+			<label index="em.charset">Zeichensatz</label>
+			<label index="em.charsetBefore">Zeichensatz vor Konvertierung</label>
 			<label index="em.tables">Tabellen</label>
-			<label index="em.tablesExclude">Tabellen ausschließen: Tabellen, die nicht kovertiert werden sollen (wird ggf. vom Update Script ergänzt)</label>
-			<label index="em.tablesProcessed">Konvertierte Tabellen: Tabellen, die bereits konvertiert wurden (wird automatisch vom Update Script während Verarbeitung eingetragen)</label>
+			<label index="em.tablesExclude">Tabellen ausschließen: Tabellen, die nicht konvertiert werden sollen (kommaseparierte Liste; wird ggf. vom Update Script ergänzt)</label>
+			<label index="em.tablesProcessed">Konvertierte Tabellen: Tabellen, die bereits konvertiert wurden (kommaseparierte Liste; wird automatisch vom Update Script während Verarbeitung eingetragen)</label>
 			<label index="em.logging">Entwicklerprotokoll</label>
+			<label index="em.enableDevlog">Logging aktivieren: Mitteilungen werden in DevLog (setzt Erweiterung Devlog voraus).</label>
+			<label index="em.updateMessageHeader">Konvertierung</label>
+			<label index="em.updateMessageWarning">Konfiguration nicht vollständig<![CDATA[<br />]]>Bitte dieses Fomular speichern!</label>
+			<label index="em.adminOnlyMessageHeader">Fehler</label>
+			<label index="em.adminOnlyMessageWarning">Jeder kann sich am Backend anmelden!</label>
+			<label index="em.adminOnlyMessageSolution">[BE][adminOnly] auf "1" setzen um den Datenbankinhalt während der Konvertierung gegen Änderungen zu schützen</label>
+			<label index="em.updateMessageLink">[Hier klicken, um den Konverter zu öffnen]</label>
 
 			<label index="head.table">Tabelle</label>
 			<label index="head.information">Information</label>
@@ -54,18 +78,30 @@
 			<label index="noContent">Tabelle hat keinen Inhalt</label>
 			<label index="hasContent">Tabelle hat %d Einträge</label>
 
+			<label index="process.updaterMsgHeader">Start Konvertierung</label>
+			<label index="process.updaterMsg">Die Konvertierung erfolgt auf eigenes Risiko!</label>
 			<label index="process.backup">Backup erstellen</label>
 			<label index="process.convert">Konvertieren!</label>
 			<label index="process.converting">Konvertiere</label>
 			<label index="process.of">von</label>
+			<label index="process.restore">Wiederherstellen!</label>
 
 			<label index="error.noTemplate">Template Fehler: Datei %s nicht gefunden!</label>
-			<label index="error.dbShowTables">DB Fehler, Tabellen können nicht angezeigt werden: %s</label>
-			<label index="error.dbCountRows">DB Fehler, Zeilen können nicht gezählt werden: %s</label>
+			<label index="error.noParameterTable">Fehler: Der Parameter 'table' darf nicht leer sein!</label>
+			<label index="error.invalidParameterTable">Fehler: Der Parameter 'table' ist ungültig!</label>
+			<label index="error.tableAlreadyProcessed">Fehler: Tabelle wurde bereits konvertiert!</label>
+			<label index="error.dbShowTables">DB Fehler: Tabellen können nicht angezeigt werden: %s</label>
+			<label index="error.dbCountRows">DB Fehler: Zeilen können nicht gezählt werden: %s</label>
+			<label index="error.dbShowCreate">DB Fehler: Create Table Statement fehlgeschlagen: %s</label>
+			<label index="error.dbCreateBackupTable">DB Fehler: Erstellung des Backups fehlgeschlagen: %s</label>
+			<label index="error.dbInsertSelect">DB Fehler: Kopieren des Inhaltes in Backup-Tabelle fehlgeschlagen: %s</label>
+			<label index="error.dbShowColumns">DB Fehler: "SHOW COLUMNS FROM _table_" fehlgeschlagen: %s</label>
+			<label index="error.dbAlterTable">DB Fehler: "ALTER TABLE ..." fehlgeschlagen: %s</label>
 
 			<label index="success.backupDone">Backup erstellt</label>
-			<label index="error.backupFailed">Fehler: Backup fehlgeschlagen!</label>
+	<!-- 	<label index="error.backupFailed">Fehler: Backup fehlgeschlagen!</label> -->
 			<label index="success.convertDone">Konvertierung abgeschlossen</label>
+			<label index="success.excludeDone">Tabelle als ausgeschlossen markiert</label>
 		</languageKey>
 	</data>
 </T3locallang>

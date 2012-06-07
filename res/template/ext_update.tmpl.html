@@ -11,8 +11,9 @@
 			<tr class="x-grid3-header">
 				<th colspan="2">###HEAD_TABLE###</th>
 				<th>###HEAD_INFORMATION###</th>
-				<th><input type="checkbox" id="toggleExclude" value="1" />
-					<label for="toggleExclude">###HEAD_EXCLUDE###</label></th>
+				<th>###HEAD_EXCLUDE###
+					<img height="12" width="12" alt="" title="###TOGGLE_EXCLUDE###"
+							id="toggleExclude" src="sysext/t3skin/icons/gfx/clip_select.gif"></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -23,7 +24,7 @@
 				<td class="information">###INFORMATION###</td>
 				<td class="control">
 					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### begin -->
-					<input name="###TABLENAME###" type="checkbox" value="1" class="table-skip" />
+					<input name="###TABLENAME###" type="checkbox" value="1" class="table-skip" ###CHECKED### />
 					<!-- ###TEMPLATE_TABLEEXCLUDE_ITEM### end -->
 				</td>
 			</tr>
@@ -38,7 +39,8 @@
 				###UPDATERMSG###<br />
 				<input type="checkbox" name="backup" id="backup" checked="checked" />
 					<label for="backup">###PROCESS_BACKUP###</label>
-				<input type="button" value="###PROCESS_CONVERT###" style="width: 250px" />
+				<input id="process-convert" type="button" value="###PROCESS_CONVERT###" style="display: ###DISPLAY_CONVERT###; width: 250px" />
+				<input id="process-restore" type="button" value="###PROCESS_RESTORE###" style="display: ###DISPLAY_RESTORE###; width: 250px" />
 
 				<div class="x-progress-wrap left-align" style="width: 248px; height: 19px; display: none;">
 					<div class="x-progress-inner">
@@ -81,8 +83,12 @@ jQuery.noConflict();
 		});
 			//  toggle all exclude checkboxes
 		$('#toggleExclude').click(function() {
-			var isChecked = $(this).is(':checked');
-			$('input.table-skip').attr('checked', isChecked).each(function() {
+			$('input.table-skip').each(function() {
+				if ($(this).is(':checked')) {
+					$(this).attr('checked', false);
+				} else {
+					$(this).attr('checked', true);
+				}
 				toggleParentRow(this);
 			});
 		});
@@ -104,16 +110,25 @@ jQuery.noConflict();
 		progressWidth = $('.x-progress-wrap').css('width');
 		progressWidth = parseInt(progressWidth);
 
-			//  process
-		$('input:button').click(function() {
+			//  process: convert
+		$('#process-convert').click(function() {
 			backup = $('#backup').is(':checked');
 
-			$('input:button, .x-progress-wrap').toggle();
+			$('#process-convert, .x-progress-wrap').toggle();
 				//  hide skipped items
 			$('.table-skipped').fadeOut(1000);
 				//  start process for first table
-			window.setTimeout(processTable(0), 1000);
+		//	window.setTimeout(processTable(0), 1000);
+			$('html,body').animate({scrollTop: 0}, 500);
+			processTable(0);
 		});
+			//  process: restore
+/*
+		$('#process-restore').click(function() {
+			var href = $('form').attr('action') + '&command=prepare-restore';
+			location.href = href;
+		});
+*/
 
 
 
@@ -146,8 +161,20 @@ jQuery.noConflict();
 		function processTable(index) {
 				//  stop if loop finished
 			if (index >= tableNumbers) {
-				$('input:button, .x-progress-wrap').toggle();
-alert('done!');
+			//	$('#process-restore, .x-progress-wrap').toggle();
+				$.ajax({
+					data:     {
+						'command': 'update-localconf',
+					},
+					success: function(data, success, xhr) {
+						if (data == 'ok') {
+							alert('done!');
+						} else {
+							alert(data);
+						}
+					},
+				});
+
 				return;
 			}
 
@@ -158,10 +185,10 @@ alert('done!');
 			var exclude    = itemCheck.is(':checked');
 			var offset     = $(item).offset();
 			var itemHeight = $(item).height();
-			var scrollTo   = offset.top - viewportHeight + itemHeight;
+				scrollTo   = offset.top - viewportHeight + itemHeight;
 
 				//  scroll active item into viewport
-//			$(item).find('td.information').append(' [' + scrollTo + ']');
+		//	$(item).find('td.information').append('<br /> [' + offset.top + '/' + viewportHeight + '/' + itemHeight + ']');
 			$('html,body')/*.delay(1000)*/.animate({scrollTop: scrollTo}, 500);
 
 				//  progress bar update
@@ -203,7 +230,7 @@ alert('done!');
 					} else {
 						$(item)
 							.addClass('table-processed-failed')
-							.find('td.information').html('###BACKUP_FAILED###');
+							.find('td.information').append('<br \/>' + data);
 					}
 						//  conversion
 					processConvertTable(item, tableName, index, exclude);
@@ -230,19 +257,27 @@ alert('done!');
 				},
 				success:  function(data, success, xhr) {
 					$(item).removeClass('table-inprocess');
-					if (data == 'ok') {
+					if (data == 'ok-converted') {
 						$(item)
 							.addClass('table-processed')
 						//	.find('td.information').html('###CONVERT_DONE###');
 							.find('td.information').append('<br \/>###CONVERT_DONE###');
+					} else if (data == 'ok-excluded') {
+						$(item)
+							.addClass('table-processed')
+						//	.find('td.information').html('###CONVERT_DONE###');
+							.find('td.information').append('<br \/>###EXCLUDE_DONE###');
 					} else {
-						$(item).addClass('table-processed-failed');
+						$(item)
+							.addClass('table-processed-failed')
+							.find('td.information').append('<br \/>' + data);
 					}
 				},
 				complete: function() {
 						//  process next item
 					index++;
-					window.setTimeout(processTable(index), 500);
+				//	window.setTimeout(processTable(index), 500);
+					processTable(index);
 				},
 			});
 		}
@@ -269,7 +304,7 @@ alert('done!');
 
 
 <!-- ###TEMPLATE_TYPO3MESSAGE### begin -->
-<div style="###STYLEPOSITION### padding: 15px 15px 20px 0;">
+<div style="###STYLE###">
 	<div class="typo3-message message-###MESSAGETYPE###">
 		<div class="message-header">###MESSAGEHEADER###</div>
 		<div class="message-body">###MESSAGEBODY###</div>
