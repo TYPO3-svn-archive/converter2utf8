@@ -147,7 +147,7 @@ class ext_update {
 	 * @return	boolean
 	 */
 	public function access($what = 'all') {
-		return TRUE;
+		return FALSE;
 	}
 
 
@@ -262,9 +262,6 @@ class ext_update {
 	 * @since 0.1.0
 	 */
 	protected function displayTableList() {
-##echo '<pre><b>$TYPO3_CONF_VARS[BE][adminOnly] @ ' . __FILE__ . '::' . __LINE__ . ':</b> ' . print_r($GLOBALS['TYPO3_CONF_VARS']['BE']['adminOnly'], 1) . '</pre>';
-##echo '<pre><b>$TYPO3_CONF_VARS[SYS][setDBinit] @ ' . __FILE__ . '::' . __LINE__ . ':</b> ' . print_r($GLOBALS['TYPO3_CONF_VARS']['SYS']['setDBinit'], 1) . '</pre>';
-##exit;
 		$this->getExtConf();
 		$_tablesExclude   = t3lib_div::trimExplode(',', $this->extConf['tablesExclude'], TRUE);
 		$_tablesProcessed = t3lib_div::trimExplode(',', $this->extConf['tablesProcessed'], TRUE);
@@ -569,13 +566,21 @@ class ext_update {
 					}
 						//  collect remaining columns
 					if ($_convertThisColumn === TRUE) {
-							$textColumns[$cKey] = array();
+						$textColumns[$cKey] = array();  //  used for conversion à la J. van Hemert
+						$textFields[]       = $cKey;    //  used for conversion à la uherrmann
+							//  log
+						if (!empty ($this->extConf['enableDevlog'])) {
+							$msg = 'Column %1$s found (type: „%2$s” / eval: „%2$3”)';
+							$msg = sprintf($msg, $cKey, $cVal['config']['type'], $cVal['config']['eval']);
+							t3lib_div::devLog($msg, $this->extKey, 0);
+						}
 					}
 				}
 			}
 		}
 
 
+##/*
 			//  get table information from database
 		foreach ($textColumns as $tKey => $_) {
 		##	$sql = 'SHOW FULL COLUMNS FROM pages';
@@ -592,7 +597,9 @@ class ext_update {
 				die($msg);
 			}
 			while ($ftc = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
-				$textColumns[$ftc['Field']] = $ftc;
+				if (isset($textColumns[$ftc['Field']])) {
+					$textColumns[$ftc['Field']] = $ftc;
+				}
 			}
 			$GLOBALS['TYPO3_DB']->sql_free_result($res);
 		}
@@ -642,7 +649,7 @@ class ext_update {
 
 					// modify type back to the non-binary equivalent, but add utf8 character set / collation setting
 			##	$tcVal['Type'] = str_replace(array_values($this->typeCon), array_keys($this->typeCon), $tcVal['Type']);
-				$sql = 'ALTER TABLE ' . $table . ' MODIFY COLUMN ' . $tcVal['Field'] . ' ' . $oldtype/*$tcVal['Type']*/ .
+				$sql = 'ALTER TABLE ' . $table . ' MODIFY COLUMN ' . $tcVal['Field'] . ' ' . $oldtype .
 					   ' CHARACTER SET utf8 COLLATE utf8_general_ci ' . $tcVal['Null'];
 				if (strpos($tcVal['Type'], 'text') === FALSE) {
 					$sql .= ' DEFAULT ' . $tcVal['Default'];
@@ -670,6 +677,37 @@ class ext_update {
 				}
 			}
 		}
+##*/
+
+/*
+			//  read
+		$GLOBALS['TYPO3_DB']->sql_query('SET NAMES ' . $this->extConf['charsetBefore']);
+		$select_fields = 'uid,' . implode(',', $textFields);
+		$from_table    = $table;
+		$where_clause  = '';
+		$groupBy       = '';
+		$orderBy       = '';
+		$limit         = '';
+		$res  = $GLOBALS['TYPO3_DB']->exec_SELECTquery($select_fields, $from_table, $where_clause, $groupBy, $orderBy, $limit);
+		$rows = array();
+		while ($ftc = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res)) {
+##echo '<pre><b>$ftc @ ' . __FILE__ . '::' . __LINE__ . ':</b> ' . print_r($ftc, 1) . '</pre>';
+##exit;
+			$rows[] = $ftc;
+		}
+
+			//  write
+		$trans = array('â€ž' => '„', 'â€œ' => '”');
+		$GLOBALS['TYPO3_DB']->sql_query('SET NAMES utf8');
+	//	$table           = $table;
+		$no_quote_fields = FALSE;
+		foreach ($rows as $rVal) {
+			$where         = 'uid = ' . (int)$rVal['uid'];
+			unset($rVal['uid']);
+			$fields_values = $rVal;
+			$GLOBALS['TYPO3_DB']->exec_UPDATEquery($table, $where, $fields_values, $no_quote_fields);
+		}
+*/
 
 			//  renew table index
 		$GLOBALS['TYPO3_DB']->sql_query('REPAIR TABLE ' . $table);
@@ -789,6 +827,24 @@ class ext_update {
 			t3lib_extMgm::removeCacheFiles();
 	##	}
 
+			//  unlock adminOnly
+		$sessionData = $GLOBALS['BE_USER']->getSessionData($this->extKey);
+		if (!empty ($sessionData['setAdminOnly'])) {
+			$install = new t3lib_install();
+			$install->allowUpdateLocalConf = 1;
+			$install->updateIdentity = $this->extName;
+
+			$lines = $install->writeToLocalconf_control();
+			$install->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'BE\'][\'adminOnly\']', 1);
+			$install->writeToLocalconf_control($lines);
+
+				//  save setting in session
+			$sessionData['setAdminOnly'] = '0';
+			$GLOBALS['BE_USER']->setAndSaveSessionData($this->extKey, $sessionData);
+		}
+
+
+
 		echo 'ok';
 		exit;
 	}
@@ -877,6 +933,10 @@ class ext_update {
 			$lines = $install->writeToLocalconf_control();
 			$install->setValueInLocalconfFile($lines, '$TYPO3_CONF_VARS[\'BE\'][\'adminOnly\']', 1);
 			$install->writeToLocalconf_control($lines);
+
+				//  save setting in session
+			$sessionData['setAdminOnly'] = $_POST['data']['setAdminOnly'];
+			$GLOBALS['BE_USER']->setAndSaveSessionData($this->extKey, $sessionData);
 		}
 
 
