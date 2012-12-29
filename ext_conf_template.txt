@@ -3,7 +3,7 @@
 	# customsubcategory=logging=LLL:EXT:converter2utf8/locallang.xml:em.logging
 
 	# cat=basic/charset/; type=string; label=LLL:EXT:converter2utf8/locallang.xml:em.charsetBefore
-charsetBefore = latin1
+#charsetBefore = latin1
 
 	# cat=basic/tables/; type=string; label=LLL:EXT:converter2utf8/locallang.xml:em.tablesExclude
 tablesExclude =
